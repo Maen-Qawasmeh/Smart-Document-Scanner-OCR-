@@ -6,9 +6,19 @@
 
 **Developer:** [Maen Qawasmeh](https://github.com/Maen-Qawasmeh)  
 **Source code:** [GitHub repository](https://github.com/Maen-Qawasmeh/Smart-Document-Scanner-OCR-)  
-**Live demo:** *Not deployed yet — to be added after a successful public deployment.*
+**Live demo:** [Try the interactive Streamlit app](https://b3x5qyi3y6karuj9hfbprv.streamlit.app/)
 
 ---
+
+## Live demo
+
+**[🚀 Launch Smart Document Scanner & OCR](https://b3x5qyi3y6karuj9hfbprv.streamlit.app/)**
+
+Try the application in your browser—no local Python installation is required. Upload a JPG or PNG document, optionally enable document scanning for perspective correction, choose **Original**, **Grayscale**, **CLAHE**, or **Adaptive Thresholding**, and click **Scan & Extract Text**.
+
+The hosted demo displays detected text and per-segment confidence scores. You can export **TXT**, **JSON**, and a **scanned PNG**. These three download controls were exercised successfully during cloud testing.
+
+> **Deployment note:** The cloud application uses lightweight `PP-OCRv5_mobile_det` and `en_PP-OCRv5_mobile_rec` models for CPU inference. The notebook's historical FUNSD experiments used a different (medium) model configuration; their CER/WER numbers should not be interpreted as evaluation metrics for the hosted mobile models. The demo runs on shared cloud resources, so cold starts and model initialization may take extra time.
 
 ## Overview
 
@@ -91,7 +101,9 @@ The application lets the user compare four input representations rather than ass
 
 ### 3. Extract text with PaddleOCR
 
-The recorded experiments initialize English, CPU-based PaddleOCR with automatic document orientation classification, unwarping, and text-line orientation disabled. Notebook logs show cached `PP-OCRv6_medium_det` and `PP-OCRv6_medium_rec` models in that environment. The application displays the recognized text segments and confidence scores returned by the engine.
+The recorded notebook experiments initialize English, CPU-based PaddleOCR with automatic document orientation classification, unwarping, and text-line orientation disabled. Notebook logs show cached `PP-OCRv6_medium_det` and `PP-OCRv6_medium_rec` models in that experimental environment.
+
+For the **public Streamlit deployment**, the OCR engine was configured with `PP-OCRv5_mobile_det` and `en_PP-OCRv5_mobile_rec`, `enable_mkldnn=False`, and `cpu_threads=2` to make CPU-hosted inference more practical. The application displays the recognized text segments and confidence scores returned by the engine.
 
 **Important:** OCR confidence measures the model's internal confidence, **not** recognition accuracy against a verified reference.
 
@@ -103,7 +115,18 @@ The recorded experiments initialize English, CPU-based PaddleOCR with automatic 
 
 From the interface, users can upload a JPG/PNG, optionally turn on document scanning, choose the image preprocessing mode, click **Scan & Extract Text**, inspect recognized text and scores, and download TXT, JSON, or a scanned PNG. The original-mode OCR is evaluated directly on the uploaded or perspective-corrected pixels.
 
-The observed mobile-document test reported **37 recognized text segments**, **97.78% mean confidence**, and **89.61% minimum confidence** in the Streamlit UI. These are **one-run interface observations**, not ground-truth CER/WER scores or a multi-image benchmark.
+### Cloud demo smoke tests (October 2026)
+
+The public demo was tested with a real phone photograph of a tilted respiratory-health document. With document scanning enabled, the app visibly straightened and cropped the page and completed OCR under multiple preprocessing modes. An additional scanned form was successfully processed online, producing **29 text segments**, **98.77% mean confidence**, and **96.61% minimum confidence**.
+
+On the tilted mobile document, the observed cloud results included:
+
+| Preprocessing | Recognized text segments | Average confidence | Minimum confidence |
+| --- | ---: | ---: | ---: |
+| Grayscale | 37 | 97.39% | 90.83% |
+| CLAHE | 37 | 97.63% | 92.64% |
+
+These values come from individual hosted-app test runs; they are **confidence statistics, not ground-truth recognition accuracy**. CLAHE's slightly higher confidence here does not establish a lower CER or WER. Scanning, OCR display, and TXT/JSON/scanned-PNG downloads were also exercised in the deployed interface.
 
 ## Experimental evaluation
 
@@ -187,6 +210,7 @@ Smart-Document-Scanner-OCR/
 ├── test_pipeline.py
 ├── test_unified_pipeline.py
 ├── requirements.txt
+├── packages.txt                 # Linux system dependencies for cloud deployment
 └── .gitignore
 ```
 
@@ -194,7 +218,7 @@ Smart-Document-Scanner-OCR/
 
 ## Run locally
 
-**Development environment:** Python 3.12 with CPU PaddlePaddle/PaddleOCR. A clean-install and Linux cloud-build compatibility check is still pending.
+**Development environment:** Python 3.12 with CPU PaddlePaddle/PaddleOCR. The Streamlit Community Cloud deployment has completed a successful Linux installation and interactive OCR smoke tests. This does not constitute a reproducible clean-install test on every operating system or a production reliability guarantee.
 
 ```bash
 # Clone the public repository
@@ -218,7 +242,7 @@ For dataset-dependent notebook work, obtain FUNSD from its source, observe its u
 - **Small text and tables** can be missed or merged across OCR regions. The notebook's ROI experiment demonstrates both gains and artifacts after scaling.
 - **Confidence ≠ accuracy.** CER/WER require annotated ground truth and should not be inferred from confidence percentages.
 - **Reading order:** The notebook's geometry-based reconstruction can merge columns or split/merge lines; resulting CER/WER reflect both OCR and alignment decisions.
-- **CPU inference / hosting:** PaddleOCR model initialization and memory use may strain free hosting limits. Linux installation and shared-resource behavior need validation.
+- **CPU inference / hosting:** The public demo has successfully run on Streamlit Community Cloud with mobile OCR models, but shared hosting, memory limits, model downloads, and cold starts can still affect availability and latency.
 - **Input scope:** JPG/JPEG/PNG single-image processing; multi-page PDF import, key-value extraction, and dedicated table structure recovery are not implemented in the current app.
 
 ## Future improvements
@@ -228,7 +252,7 @@ For dataset-dependent notebook work, obtain FUNSD from its source, observe its u
 - Add structured document understanding, table reconstruction, and reading-order correction.
 - Explore targeted upscaling and OCR retries for difficult small-text regions.
 - Add multi-page PDF support and optional language/model selection.
-- Harden cloud dependencies, startup performance, and failure handling before positioning the demo as a production service.
+- Further pin and validate cloud dependencies, improve startup performance, and add monitoring and failure handling before positioning the demo as a production service.
 
 ## License and reuse
 
