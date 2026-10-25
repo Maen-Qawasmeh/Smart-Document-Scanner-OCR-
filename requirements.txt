@@ -1,0 +1,9 @@
+numpy
+opencv-python-headless
+pandas
+Pillow
+matplotlib
+paddlepaddle
+paddleocr
+streamlit
+jiwer
